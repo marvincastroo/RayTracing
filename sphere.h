@@ -1,0 +1,51 @@
+#ifndef SPHERE_H
+#define SPHERE_H
+
+#include "hittable.h"
+#include "vec3.h"
+
+// sphere inherits from hittable
+class sphere: public hittable{
+    public:
+        // constructor for sphere class
+        
+        sphere(const point3& center, double radius) : center(center), radius(std::fmax(0, radius)) {
+            // center(center), radius(std::fmax(0, radius)) is the initializer list. 
+            // It initializes the private member variables center and radius with the provided arguments.
+            // fmax(0, radius) ensures radius is never negative
+        }
+        
+        // implementation of the hit function from hittable class
+        bool hit (const ray& r, double ray_tmin, double ray_tmax, hit_record& rec) const override {
+            vec3 oc = center - r.origin();
+            auto a = r.direction().length_squared();
+            auto h = dot(r.direction(), oc);
+            auto c = oc.length_squared() - radius*radius;
+
+            auto discriminant = h*h - a*c;
+            if (discriminant < 0) 
+                return false;
+            
+            auto sqrtd = std::sqrt(discriminant);
+
+            // Find the nearest root that lies in the acceptable range
+            auto root = (h - sqrtd) / a;
+            if (root <= ray_tmin || ray_tmax <= root) {
+                root = (h + sqrtd) / a;
+                if (root <= ray_tmin || ray_tmax <= root) 
+                    return false;
+            }
+
+            rec.t = root;
+            rec.p = r.at(rec.t);
+            rec.normal = (rec.p - center) / radius;
+
+            return true;
+        }
+    
+    private:
+        point3 center;
+        double radius;
+};
+
+#endif
